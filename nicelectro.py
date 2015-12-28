@@ -3,7 +3,7 @@ import numpy as np
 import theano.tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 class electronice(object):
-    def __init__(self, rng, inp, n_in, A,D,Kx,Ky,inverse=False):
+    def __init__(self,  inp, n_in, A,D,Kx,Ky,inverse=False):
         activation = self.knot_activ
         self.inp = inp
         
@@ -70,6 +70,10 @@ class Params1(object):
         Kx = theano.shared(Kx)
         Ky = theano.shared(Ky)
         self.params = [A,D,Kx,Ky]
+
+
+
+        
 inp = T.vector('inp')
 srng = RandomStreams(seed=12345)
 n_in = 5
@@ -77,8 +81,8 @@ n_in = 5
 #D_values = np.random.normal(0,0.02,(n_in,))
 coup1 = Params1(n_in)
 [A_values,D_values,Kx,Ky] = coup1.params
-layer1 = electronice(srng,inp,n_in,A=A_values,D=D_values,Kx=Kx,Ky=Ky)
-layer2 = electronice(rng=srng,n_in=n_in,inp=layer1.output,A=A_values,D=D_values,Kx=Kx,Ky=Ky ,inverse=True)
+layer1 = electronice(inp,n_in,A=A_values,D=D_values,Kx=Kx,Ky=Ky)
+layer2 = electronice(n_in=n_in,inp=layer1.output,A=A_values,D=D_values,Kx=Kx,Ky=Ky ,inverse=True)
 cost = T.sum(layer2.output)
 params = layer1.params + layer2.params 
 grad = T.grad(cost,params)

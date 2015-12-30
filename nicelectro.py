@@ -17,18 +17,22 @@ class electronice(object):
         self.A = A
         self.D = D
         if inverse == False:
-            self.h1 = T.dot(inp, T.diag(self.A)) 
+            self.h1 = T.dot(inp, T.diag(T.tanh(self.A))) 
             self.h2 = T.dot(self.h1,C)
-            self.h3 = T.dot(self.h2,T.diag(self.D))
+            self.h3 = T.dot(self.h2,T.diag(T.tanh(self.D)))
             self.lin_output = T.dot(self.h3,C_t)
             self.output,_ = theano.scan(lambda i,list_x : self.knot_activ(list_x[i]), sequences=T.arange(self.lin_output.shape[0]), non_sequences=self.lin_output)
+            self.activD,_ = theano.scan(lambda i,list_x : self.knot_Det(list_x[i]), sequences=T.arange(self.lin_output.shape[0]), non_sequences=self.lin_output)
+            self.det = T.log(T.prod(T.tanh(self.A))*T.prod(T.tanh(self.D))*T.prod(self.activD))
         else:
             self.h1,_ = theano.scan(lambda i,list_x : self.knot_activ_inverse(list_x[i]), sequences=T.arange(inp.shape[0]), non_sequences=inp)
             self.h2 = T.dot(self.h1,C)
-            h3 = T.dot(self.h2, T.diag(1/self.D)) 
-            h4 = T.dot(h3,C_t)
-            lin_output = T.dot(h4,T.diag(1/self.A))
-            self.output = lin_output
+            self.h3 = T.dot(self.h2, T.diag(1/T.tanh(self.D))) 
+            self.h4 = T.dot(self.h3,C_t)
+            self.lin_output = T.dot(self.h4,T.diag(1/T.tanh(self.A)))
+            self.output = self.lin_output
+            self.activD,_ = theano.scan(lambda i,list_x : self.knot_Det_inverse(list_x[i]), sequences=T.arange(self.inp.shape[0]), non_sequences=inp)
+            self.det = T.log(T.prod(T.tanh(self.A))*T.prod(T.tanh(self.D))*T.prod(self.activD))
         self.params = [self.A, self.D, self.Kx,self.Ky]
         
     def knot_activ(self,x):
@@ -36,6 +40,12 @@ class electronice(object):
 
     def knot_activ_inverse(self,x):
         return (x<T.tanh(self.Ky))*( (x+1)*(T.tanh(self.Kx)+1)/(T.tanh(self.Ky)+1) - 1 )  + (x>=T.tanh(self.Ky)) *( (x-1)*(T.tanh(self.Kx)-1)/(T.tanh(self.Ky)-1) + 1 )
+    
+    def knot_Det(self,x):
+        return (x<T.tanh(self.Kx))*( (T.tanh(self.Ky)+1)/(T.tanh(self.Kx)+1)  )  + (x>=T.tanh(self.Kx)) *( (T.tanh(self.Ky)-1)/(T.tanh(self.Kx)-1)  )
+
+    def knot_Det_inverse(self,x):
+        return (x<T.tanh(self.Ky))*( (T.tanh(self.Kx)+1)/(T.tanh(self.Ky)+1)  )  + (x>=T.tanh(self.Ky)) *((T.tanh(self.Kx)-1)/(T.tanh(self.Ky)-1)  )
     def dct_matrix(self,rows, cols, unitary=True):
         rval = np.zeros((rows, cols))
         col_range = np.arange(cols)
@@ -50,22 +60,22 @@ class electronice(object):
 class Params1(object):
     def __init__(self,n_in,A=None,D=None,Kx=None,Ky=None):
         if A is None:
-            A_values = np.random.normal(0,0.2,(n_in,))
+            A_values = np.random.normal(1,0.1,(n_in,))
         else:
             A_values = A
         A = theano.shared(A_values,borrow=True)
         
         if D is None:
-            D_values = np.random.normal(0,0.2,(n_in,))
+            D_values = np.random.normal(1,0.1,(n_in,))
         else:
             D_values = D
         D = theano.shared(D_values, borrow=True)
 
         if Kx is None:
-            Kx = 0
+            Kx = 0.0
         
         if Ky is None:
-            Ky = 0
+            Ky = 0.0
 
         Kx = theano.shared(Kx)
         Ky = theano.shared(Ky)
@@ -75,7 +85,7 @@ class Params1(object):
 
 if __name__ == '__main__':        
     inp = T.vector('inp')
-    srng = RandomStreams(seed=12345)
+    srng = RandomStreams(seed=1235)
     n_in = 5
     #A_values = np.random.normal(0,0.02,(n_in,))
     #D_values = np.random.normal(0,0.02,(n_in,))

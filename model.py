@@ -21,6 +21,7 @@ class NiceACDC(object):
         coup5 = Params1(self.n_in)
         [A5_values,D5_values,Kx5,Ky5] = coup5.params
         self.params = coup1.params + coup2.params + coup3.params + coup4.params + coup5.params
+        #self.params = coup1.params + coup2.params + coup3.params
         ##Build the layers
         self.layer1 = electronice(
             inp = input,
@@ -64,8 +65,8 @@ class NiceACDC(object):
         )
         wrt = self.inp
         expr = self.layer5.output
-        self.Jacob , updates = theano.scan(lambda i, y,x : theano.gradient.jacobian(expr[i], x), sequences=T.arange(expr.shape[0]), non_sequences=[expr,wrt]) 
-        self.logDet  = theano.tensor.log(theano.tensor.nlinalg.Det()(self.Jacob))
+        self.newDet = self.layer1.det+self.layer2.det+self.layer3.det+self.layer4.det+self.layer5.det
+        self.newLogDet = self.newDet
         self.layer6 = electronice(
             n_in = n_in,
             inp = self.layer5.output,
@@ -96,8 +97,7 @@ class NiceACDC(object):
         self.layer9 = electronice(
             n_in = n_in,
             inp = self.layer8.output,
-            A = A2_values,
-            D = D2_values,
+            A = A2_values,D = D2_values,
             Kx = Kx2,
             Ky = Ky2,
             inverse = True
@@ -113,14 +113,16 @@ class NiceACDC(object):
         )
         self.output = self.layer10.output
         self.prior =T.sum( -T.log(1+T.exp(self.layer5.output)) - T.log(1 + T.exp(-1*self.layer5.output)))
-        self.cost = self.prior + self.logDet
+        self.cost = self.prior + self.newLogDet
         self.grad = T.grad(self.cost,self.params)
-inp = T.vector("inp")
-n_in = 5
-ANice = NiceACDC(input = inp, n_in = n_in)
-fn = theano.function([inp],[ANice.output,ANice.prior,ANice.logDet])
-gn = theano.function([inp],ANice.grad)
-input  =np.random.uniform(size=(n_in,))
-print input
-#print gn(input)
-print fn(input)
+
+if __name__ == '__main__':
+    inp = T.vector("inp")
+    n_in = 784
+    ANice = NiceACDC(input = inp, n_in = n_in)
+    fn = theano.function([inp],[ANice.output])
+    gn = theano.function([inp],ANice.grad)
+    input  =np.random.uniform(size=(n_in,))
+    print input
+    #print gn(input)
+    print fn(input)

@@ -17,23 +17,21 @@ class electronice(object):
         self.A = A
         self.D = D
         if inverse == False:
-            self.h1 = T.dot(inp, T.diag(T.tanh(self.A))) 
+            self.h1 = inp*T.tanh(self.A)
             self.h2 = T.dot(self.h1,C)
-            self.h3 = T.dot(self.h2,T.diag(T.tanh(self.D)))
+            self.h3 = self.h2*T.tanh(self.D)
             self.lin_output = T.dot(self.h3,C_t)
-            #self.output,_ = theano.scan(lambda i,list_x : self.knot_activ(list_x[i]), sequences=T.arange(self.lin_output.shape[0]), non_sequences=self.lin_output)
             self.output = self.knot_activ(self.lin_output)
-            self.activD,_ = theano.scan(lambda i,list_x : self.knot_Det(list_x[i]), sequences=T.arange(self.lin_output.shape[0]), non_sequences=self.lin_output)
+            self.activD = self.knot_Det(self.lin_output)
             self.det = T.log(T.prod(T.tanh(self.A))*T.prod(T.tanh(self.D))*T.prod(self.activD))
         else:
-            #self.h1,_ = theano.scan(lambda i,list_x : self.knot_activ_inverse(list_x[i]), sequences=T.arange(inp.shape[0]), non_sequences=inp)
             self.h1 = self.knot_activ_inverse(inp)
             self.h2 = T.dot(self.h1,C)
-            self.h3 = T.dot(self.h2, T.diag(1/T.tanh(self.D))) 
+            self.h3 = self.h2* (1/T.tanh(self.D)) 
             self.h4 = T.dot(self.h3,C_t)
-            self.lin_output = T.dot(self.h4,T.diag(1/T.tanh(self.A)))
+            self.lin_output = self.h4*(1/T.tanh(self.A))
             self.output = self.lin_output
-            self.activD,_ = theano.scan(lambda i,list_x : self.knot_Det_inverse(list_x[i]), sequences=T.arange(self.inp.shape[0]), non_sequences=inp)
+            self.activD = self.knot_Det_inverse(inp)
             self.det = T.log(T.prod(T.tanh(self.A))*T.prod(T.tanh(self.D))*T.prod(self.activD))
         self.params = [self.A, self.D, self.Kx,self.Ky]
         

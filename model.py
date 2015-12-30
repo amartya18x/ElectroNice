@@ -69,7 +69,7 @@ class NiceACDC(object):
         self.newLogDet = self.newDet
         self.layer6 = electronice(
             n_in = n_in,
-            inp = self.layer5.output,
+            inp = self.inp,
             A = A5_values,
             D = D5_values,
             Kx = Kx5,
@@ -112,10 +112,63 @@ class NiceACDC(object):
             inverse = True
         )
         self.output = self.layer10.output
-        self.prior =T.sum( -T.log(1+T.exp(self.layer5.output)) - T.log(1 + T.exp(-1*self.layer5.output)))
+        self.prior =T.mean(T.sum( -T.log(1+T.exp(self.layer5.output)) - T.log(1 + T.exp(-1*self.layer5.output)),axis=1))
         self.cost = self.prior + self.newLogDet
         self.grad = T.grad(self.cost,self.params)
 
+class Sampler(object):
+    def __init__(self,input,n_in,params):
+        self.inp = input
+        self.n_in = n_in
+        
+        [A1_values,D1_values,Kx1,Ky1,A2_values,D2_values,Kx2,Ky2,A3_values,D3_values,Kx3,Ky3,A4_values,D4_values,Kx4,Ky4,A5_values,D5_values,Kx5,Ky5] = params
+        
+        self.layer6 = electronice(
+            n_in = n_in,
+            inp = self.inp,
+            A = A5_values,
+            D = D5_values,
+            Kx = Kx5,
+            Ky = Ky5,
+            inverse = True 
+        )
+        self.layer7 = electronice(
+            n_in = n_in,
+            inp = self.layer6.output,
+            A = A4_values,
+            D = D4_values,
+            Kx = Kx4,
+            Ky = Ky4,
+            inverse = True
+        )
+        self.layer8 = electronice(
+            n_in = n_in,
+            inp = self.layer7.output,
+            A = A3_values,
+            D = D3_values,
+            Kx = Kx3,
+            Ky = Ky3,
+            inverse = True
+        )
+        self.layer9 = electronice(
+            n_in = n_in,
+            inp = self.layer8.output,
+            A = A2_values,D = D2_values,
+            Kx = Kx2,
+            Ky = Ky2,
+            inverse = True
+        )
+        self.layer10 =  electronice(
+            n_in = n_in,
+            inp = self.layer9.output,
+            A = A1_values,
+            D = D1_values,
+            Kx = Kx1,
+            Ky = Ky1,
+            inverse = True
+        )
+        self.output = self.layer10.output
+        
 if __name__ == '__main__':
     inp = T.vector("inp")
     n_in = 784

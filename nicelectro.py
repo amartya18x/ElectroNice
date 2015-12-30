@@ -23,7 +23,7 @@ class electronice(object):
             self.lin_output = T.dot(self.h3,C_t)
             self.output = self.knot_activ(self.lin_output)
             self.activD = self.knot_Det(self.lin_output)
-            self.det = T.log(T.prod(T.tanh(self.A))*T.prod(T.tanh(self.D)))+T.mean(T.log(T.prod(self.activD)))
+            self.det = T.log(T.prod(T.tanh(self.A))*T.prod(T.tanh(self.D)))+T.mean(T.log(T.prod(self.activD,axis=0)))
         else:
             self.h1 = self.knot_activ_inverse(inp)
             self.h2 = T.dot(self.h1,C)
@@ -32,7 +32,7 @@ class electronice(object):
             self.lin_output = self.h4*(1/T.tanh(self.A)).dimshuffle('x',0)
             self.output = self.lin_output
             self.activD = self.knot_Det_inverse(inp)
-            self.det = T.log(T.prod(T.tanh(self.A))*T.prod(T.tanh(self.D)))+T.mean(T.log(T.prod(self.activD)))
+            self.det = T.log(T.prod(T.tanh(self.A))*T.prod(T.tanh(self.D)))+T.mean(T.log(T.prod(self.activD,axis=0)))
         self.params = [self.A, self.D, self.Kx,self.Ky]
         
     def knot_activ(self,x):

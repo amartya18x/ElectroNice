@@ -4,7 +4,7 @@ import theano.tensor as T
 import numpy as np
 from theano.tensor.shared_randomstreams import RandomStreams
 import theano.tensor.nlinalg
-
+from optimization import Adam
 class NiceACDC(object):
     def __init__(self,input,n_in):
         self.inp = input
@@ -113,9 +113,10 @@ class NiceACDC(object):
         )
         self.output = self.layer10.output
         self.prior =T.mean(T.sum( -T.log(1+T.exp(self.layer5.output)) - T.log(1 + T.exp(-1*self.layer5.output)),axis=1))
+        #self.prior = T.mean(T.log(T.prod(T.exp(-self.layer5.output*self.layer5.output)/np.sqrt(2*np.pi),axis=1)))
         self.cost = self.prior + self.newLogDet
         self.grad = T.grad(self.cost,self.params)
-
+        self.updates = Adam(self.cost,self.params)
 class Sampler(object):
     def __init__(self,input,n_in,params):
         self.inp = input

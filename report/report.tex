@@ -103,4 +103,12 @@ The code is available on \url{http://github.com/amartya18x/ElectroNice}
 \item \textbf{trainmnist.py:} You should run this simply as \textit{python trainmnist.py} to start training. This containes hyper parameters like batch\_size and when to view a result.
 \item \textbf{sample.py:} Run \textit{python sample.py} to view a sample.
 \end{itemize}
+\section{Observations}
+\begin{itemize}
+\item The inverse is working fine. I have displayed source and output image and checked that they are same.
+\item The log-likelihood is increasing after applying the rescaling layer.
+\item The rescaling layer however appears to however have a uniform distribution. I hope, the dimshuffle I have implemented there isn't working imperfectly.
+\item The $p_H(h)$ term is still not increasing. It stays the same throughout the training phase. I do not understand this yet.
+\item There is no overfitting. I have tested on the test\_set and it is exactly the same. This is because, the $p_H(h)$ is still the same and the jacobian term is almost independant of the training data except for the non-linearity and somehow it is not mattering.
+\end{itemize}
 \end{document}

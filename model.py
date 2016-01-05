@@ -65,7 +65,7 @@ class NiceACDC(object):
             Ky = Ky5
         )
         wrt = self.inp
-        expr = self.layer5.output*(self.diag_p).dimshuffle('x',0)
+        self.expr = self.layer5.output*(self.diag_p).dimshuffle('x',0)
         self.newDet = self.layer1.det+self.layer2.det+self.layer3.det+self.layer4.det+self.layer5.det+T.sum((T.log(abs(self.diag_p))))
         self.newLogDet = self.newDet
         layer6_inp = self.inp/(self.diag_p).dimshuffle('x',0)
@@ -114,7 +114,7 @@ class NiceACDC(object):
             inverse = True
         )
         self.output = self.layer10.output
-        self.prior =T.mean(T.sum( -T.log(1+T.exp(expr)) - T.log(1 + T.exp(-1*expr)),axis=1))
+        self.prior =T.mean(T.sum( -T.log(1+T.exp(self.expr)) - T.log(1 + T.exp(-1*self.expr)),axis=1))
         #self.prior = T.mean(T.log(T.prod(T.exp(-self.layer5.output*self.layer5.output)/np.sqrt(2*np.pi),axis=1)))
         self.cost = self.prior + self.newLogDet
         self.grad = T.grad(self.cost,self.params)

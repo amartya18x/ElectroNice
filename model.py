@@ -11,7 +11,7 @@ class NiceACDC(object):
         self.n_in = n_in
         ##Build the shared parameters
         coup1 = Params1(self.n_in)
-        self.diag_p = theano.shared(np.random.normal(1,1,size=(n_in,)))
+        self.diag_p = theano.shared(np.random.normal(1,0.01,size=(n_in,)))
         [A1_values,D1_values,Kx1,Ky1] = coup1.params
         coup2 = Params1(self.n_in)
         [A2_values,D2_values,Kx2,Ky2] = coup2.params
@@ -66,7 +66,7 @@ class NiceACDC(object):
         )
         wrt = self.inp
         expr = self.layer5.output*(self.diag_p).dimshuffle('x',0)
-        self.newDet = self.layer1.det+self.layer2.det+self.layer3.det+self.layer4.det+self.layer5.det+T.log(abs(T.prod(self.diag_p)))
+        self.newDet = self.layer1.det+self.layer2.det+self.layer3.det+self.layer4.det+self.layer5.det+T.sum((T.log(abs(self.diag_p))))
         self.newLogDet = self.newDet
         layer6_inp = self.inp/(self.diag_p).dimshuffle('x',0)
         self.layer6 = electronice(

@@ -72,11 +72,12 @@ class Params1(object):
         D = theano.shared(D_values, borrow=True)
 
         if Kx is None:
-            Kx = 0.0
+            Kx = np.zeros(n_in,)
+        
         
         if Ky is None:
-            Ky = 0.0
-
+            Ky = np.zeros(n_in,)
+        
         Kx = theano.shared(Kx)
         Ky = theano.shared(Ky)
         self.params = [A,D,Kx,Ky]

@@ -22,6 +22,9 @@ sample_model = theano.function(
 import matplotlib.pyplot as plt
 #%matplotlib inline
 samp = np.random.logistic(size=(1,784)).astype('float32')
+samples = np.random.uniform(size=(1,784)).astype('float32')
+samp = np.log(samples) - np.log(1-samples)
 gene = np.asarray(sample_model(samp)).reshape(28,28)
-plt.imshow(gene*255*748,cmap='Greys')
+#print (gene+1)*0.5
+plt.imshow(0.5*(gene+1)*255*748,cmap='Greys')
 plt.show()

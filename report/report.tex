@@ -1,0 +1,106 @@
+\documentclass{article}
+\usepackage{algorithm}% http://ctan.org/pkg/algorithms
+\usepackage{algpseudocode}% http://ctan.org/pkg/algorithmicx
+\usepackage{epsfig}
+\usepackage{tikz}
+\usepackage{caption}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{float}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{amssymb}
+\title{Electronice}
+\author{Amartya Sanyal}
+\begin{document}
+\maketitle
+\section{Model Description}
+The model in a way combines the NICE model and the ACDC layers with a piecewise non-linearity employed at the end of each layer. The reconstruction error is ideally zero as we have an exact inversion of the encoder function in the decoder function.
+\subsection{Layer}
+Each layer is an ACDC layer with an added non-linearity. The parameters in each layer are $D$, $A$, $K_x$ and $K_y$. Here, $D$ and $A$ are diagnol matrices . The dimension of these matrices are $n\times n$, where $n$ is the number of features in an example. $K_x$ and $K_y$ are column vectors of $n$ dimension. Given the input to a layer is $x$ the output $o$ is calculated as follows.
+
+\subsection{Pseudocode}
+\begin{algorithm}
+  \caption{Encoder}\label{neis}
+  \begin{algorithmic}[1]
+    \Procedure{Encoder}{$X$}
+    \State $temp \gets X\cdot A\cdot C\cdot D\cdot C^t$
+    \For{$i=0$ to $|X|$} \Comment{Time = O(n)}
+    \If {$temp[i] \le Tanh(Kx[i])$}
+    \State $out[i]  \gets ( (temp[i]+1)*(Tanh(Ky[i])+1)/(Tanh(Kx[i])+1) - 1 )  $
+    \Else 
+    \State $out[i]  \gets ( (temp[i]-1)*(Tanh(Ky[i])-1)/(Tanh(Kx[i])-1) + 1 )$
+    \EndIf
+    \EndFor
+    \State return $out$
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+We need to calculate the exact inverse of our encoding function. In this way the \textit{Autoencoder} works as $ out = f^{-1}(f(x)) = x$. If $out_{enc} = f(x)$, then $f^{-1}(out_{enc})$ is calculated as follows
+\begin{algorithm}
+  \caption{Decoder}\label{neis}
+  \begin{algorithmic}[1]
+    \Procedure{Decoder}{$X$}
+    \For{$i=0$ to $|X|$} \Comment{Time = O(n)}
+    \If {$X[i] \le Tanh(Ky[i])$}
+    \State $temp[i]  \gets ( (X[i]+1)*(Tanh(Kx[i])+1)/(Tanh(Ky[i])+1) - 1 )  $
+    \Else 
+    \State $temp[i]  \gets ( (X[i]-1)*(Tanh(Kx[i])-1)/(Tanh(Ky[i])-1) + 1 )$
+    \EndIf
+    \EndFor
+    \State $out[i] \gets  temp\cdot C \cdot D^{-1} \cdot C^t \cdot A^{-1}$
+    \State return $out$
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+We use five of these layers one after the other. Each of these layers have only $O(n)$ parameters. Though my implementation right now has $O(n^2)$ complexity due to the multiplication with the $C$ matrix, it can be reduced to $O(nlogn)$ by using an FFT like algorithm. The multiplication of the vector with A and D can be achieved in $O(n)$ time by element-wise multiplication as $A$ and $D$ are diagonal matrices. The piece wise non-linearity can be applied on each element in $O(1)$ time.
+
+At the end of the encoder, there is rescaling layer. Let this layer be defined by a matrix $S$. This is also a diagnol matrix and it is unbounded, in the sense that it can be allowed the expand to infinity at some points. This is similar to the rescaling layer implemented in NICE. The decoder begins with the inverse-rescaling layer and then the decoder functions
+\section{Cost Function}
+The cost function functions the same way as NICE with a change of variable. We are using logistic distribution as the prior as it has smoother gradients. The $i$ in the subscipt below refers to the layer number whereas the $j$ refers to the $j^{th}$ element in the vector.
+$$log(P_X{x}) = log(P_H(f(x))) + log(|det(\frac{\partial f(x)}{\partial x})|)$$
+The prior distribution is factorial as we want the components to be independant.
+  $$ log(P_H(f(x))) = \prod_{j=0}^{j=|x|} P_H(f(x[j]))$$
+We also impose a logistic distribution on the prior. Hence, the equation expands as follows .
+$$ log(P_H(f(x[j])) = -log(1+exp(x[j])) = log(1+exp(-x[j])) $$
+The determinant of the jacobian can be calculated in $O(n)$ time as follows. The DCT transformation matrices are unitary and hence their jacobian has a unitary determinant. The jacobian for the $A$, $D$ and the rescaling layer are diagonal matrices as they themselves are diagonal and hence the determinant is simply the product of its diagonal elements.
+\begin{align*}
+  log(|det(\frac{\partial f(x)}{\partial x})|)  &=  \sum_{i=0}^5 (log(\prod_{j=1}^{|A|} A_i[j])  &\text{jacobian for A matrix}\\
+& + log(\prod_{j=1}^{|A|} D_i[j]) & \text{jacobian for D matrix}\\ 
+& + log(\prod_{j=1}^{|A|} act\_jac_i(x)[j]))  & \text{Jacobian for non-linearity}\\
+& + \sum_{j=1}^{|A|} log(S_i[j]) & \text{Jacobian for rescaling}
+\end{align*}
+ The $act\_jac$ functions as follows. Note that the jacobian of the piece-wise linear activation function will be a diagonal matrix. Hence, to calculate the Determinanat, we can simply multiply the diagonal elements. The function below return a vector of the diagonal elements given the input vector. 
+\begin{algorithm}
+  \caption{Activation\_Jacobian}\label{jac}
+  \begin{algorithmic}[1]
+    \Procedure{act\_jac}{$X$}
+    \For{$i=0$ to $|X|$} \Comment{Time = O(n)}
+    \If {$X[i] \le Tanh(Ky[i])$}
+    \State $jac[i]  \gets (Tanh(Kx[i])+1)/(Tanh(Ky[i])+1)   $
+    \Else 
+    \State $jac[i]  \gets (Tanh(Kx[i])-1)/(Tanh(Ky[i])-1) $
+    \EndIf
+    \EndFor
+    \State return $jac$
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
+
+\section{Training}
+We are using ADAM version of stochastic gradient descent for training. The parameters for update are $A$,$D$,$K_x$ and $K_y$ for each layer and a the final rescaling layer$S$. For a five layer network, there are a total of 21 parameters. We are initially training on the mnist training set. The hyper-parameters are as follows.
+\textbf{Learning Rate: }0.00002, \textbf{b1: }0.1, \textbf{b2: }0.001, \textbf{e: }1e-8.
+As of now, I have a log-likelihood of around 1000 and it is still increasing. However, sampling is very poor.
+\section{Code}
+The code is available on \url{http://github.com/amartya18x/ElectroNice}
+\begin{itemize}
+\item  \textbf{niceelectro.py:} This describes each ACDC layer with the inversion
+\item \textbf{model.py:} This builds the training network by combining the five ACDC layers and also adds rescaling and calculates cost and updates.
+\item \textbf{optimization.py:} This containes the code to return the ADAM update rules. This is called from model.py.
+\item \textbf{trainmnist.py:} You should run this simply as \textit{python trainmnist.py} to start training. This containes hyper parameters like batch\_size and when to view a result.
+\item \textbf{sample.py:} Run \textit{python sample.py} to view a sample.
+\end{itemize}
+\end{document}

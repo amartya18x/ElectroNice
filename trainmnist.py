@@ -33,7 +33,7 @@ train_model = theano.function(
         )
 train_set_x, train_set_y = train_set
 p = len(train_set_x)
-batch_size = 100
+batch_size = 10
 n_batches = p/batch_size
 s = -1
 llh = -np.inf
@@ -41,10 +41,11 @@ while 1:
     s += 1
     batch_index = s%(n_batches-1)
     a= train_set_x[batch_index*batch_size:(batch_index+1)*batch_size]
+    a = 2*a - 1
     b = (a/784)
     cost =  train_model(b)
     llh = cost[2]
-    if s%50 == 0:
+    if s%100 == 0:
         print cost
         with open('best_model.pkl', 'w') as f:
                         cPickle.dump(ANice.params, f)

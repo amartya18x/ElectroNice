@@ -27,7 +27,7 @@ class electronice(object):
         else:
             self.h1 = self.knot_activ_inverse(inp)
             self.h2 = T.dot(self.h1,C)
-            self.h3 = self.h2* (1/T.tanh(self.D)).dimshuffle('x',0) 
+            self.h3 = self.h2* (1/T.tanh(self.D)).dimshuffle('x',0)
             self.h4 = T.dot(self.h3,C_t)
             self.lin_output = self.h4*(1/T.tanh(self.A)).dimshuffle('x',0)
             self.output = self.lin_output
@@ -72,11 +72,11 @@ class Params1(object):
         D = theano.shared(D_values, borrow=True)
 
         if Kx is None:
-            Kx = np.zeros(n_in,)
+            Kx = np.ones(n_in,)*(-0.5)
         
         
         if Ky is None:
-            Ky = np.zeros(n_in,)
+            Ky = np.ones(n_in,)*(0.5)
         
         Kx = theano.shared(Kx)
         Ky = theano.shared(Ky)

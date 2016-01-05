@@ -63,9 +63,9 @@ At the end of the encoder, there is rescaling layer. Let this layer be defined b
 The cost function functions the same way as NICE with a change of variable. We are using logistic distribution as the prior as it has smoother gradients. The $i$ in the subscipt below refers to the layer number whereas the $j$ refers to the $j^{th}$ element in the vector.
 $$log(P_X{x}) = log(P_H(f(x))) + log(|det(\frac{\partial f(x)}{\partial x})|)$$
 The prior distribution is factorial as we want the components to be independant.
-  $$ log(P_H(f(x))) = \prod_{j=0}^{j=|x|} P_H(f(x[j]))$$
+  $$ P_H(f(x)) = \prod_{j=0}^{j=|x|} P_H(f(x[j]))$$
 We also impose a logistic distribution on the prior. Hence, the equation expands as follows .
-$$ log(P_H(f(x[j])) = -log(1+exp(x[j])) = log(1+exp(-x[j])) $$
+$$ log(P_H(f(x[j])) = -log(1+exp(x[j])) - log(1+exp(-x[j])) $$
 The determinant of the jacobian can be calculated in $O(n)$ time as follows. The DCT transformation matrices are unitary and hence their jacobian has a unitary determinant. The jacobian for the $A$, $D$ and the rescaling layer are diagonal matrices as they themselves are diagonal and hence the determinant is simply the product of its diagonal elements.
 \begin{align*}
   log(|det(\frac{\partial f(x)}{\partial x})|)  &=  \sum_{i=0}^5 (log(\prod_{j=1}^{|A|} A_i[j])  &\text{jacobian for A matrix}\\
@@ -110,5 +110,6 @@ The code is available on \url{http://github.com/amartya18x/ElectroNice}
 \item The rescaling layer however appears to however have a uniform distribution. I hope, the dimshuffle I have implemented there isn't working imperfectly.
 \item The $p_H(h)$ term is still not increasing. It stays the same throughout the training phase. I do not understand this yet.
 \item There is no overfitting. I have tested on the test\_set and it is exactly the same. This is because, the $p_H(h)$ is still the same and the jacobian term is almost independant of the training data except for the non-linearity and somehow it is not mattering.
+\item The Kx and Ky is getting pushed towards 0. So, effectively it is becoming a linear transformation.
 \end{itemize}
 \end{document}

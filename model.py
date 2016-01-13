@@ -12,6 +12,7 @@ class NiceACDC(object):
         ##Build the shared parameters
         coup1 = Params1(self.n_in)
         self.diag_p = theano.shared(np.random.normal(1,0.01,size=(n_in,)))
+        self.diag_sp = theano.shared(np.random.normal(0,0.01,size=(n_in,)))
         [A1_values,D1_values,Kx1,Ky1] = coup1.params
         coup2 = Params1(self.n_in)
         [A2_values,D2_values,Kx2,Ky2] = coup2.params
@@ -21,7 +22,7 @@ class NiceACDC(object):
         [A4_values,D4_values,Kx4,Ky4] = coup4.params
         coup5 = Params1(self.n_in)
         [A5_values,D5_values,Kx5,Ky5] = coup5.params
-        self.params = coup1.params + coup2.params + coup3.params + coup4.params + coup5.params + [self.diag_p]
+        self.params = coup1.params + coup2.params + coup3.params + coup4.params + coup5.params + [self.diag_p,self.diag_sp]
         #self.params = coup1.params + coup2.params + coup3.params
         ##Build the layers
         self.layer1 = electronice(
@@ -65,10 +66,10 @@ class NiceACDC(object):
             Ky = Ky5
         )
         wrt = self.inp
-        self.expr = self.layer5.output*(self.diag_p).dimshuffle('x',0)
+        self.expr = (self.layer5.output)*(self.diag_p).dimshuffle('x',0)+self.diag_sp.dimshuffle('x',0)
         self.newDet = self.layer1.det+self.layer2.det+self.layer3.det+self.layer4.det+self.layer5.det+T.sum((T.log(abs(self.diag_p))))
         self.newLogDet = self.newDet
-        layer6_inp = self.inp/(self.diag_p).dimshuffle('x',0)
+        layer6_inp = (self.inp-self.diag_sp.dimshuffle('x',0))/(self.diag_p).dimshuffle('x',0)
         self.layer6 = electronice(
             n_in = n_in,
             inp = layer6_inp,
@@ -125,8 +126,8 @@ class Sampler(object):
         self.inp = input
         self.n_in = n_in
         
-        [A1_values,D1_values,Kx1,Ky1,A2_values,D2_values,Kx2,Ky2,A3_values,D3_values,Kx3,Ky3,A4_values,D4_values,Kx4,Ky4,A5_values,D5_values,Kx5,Ky5,diag_p] = params
-        self.layer6_inp = self.inp/diag_p
+        [A1_values,D1_values,Kx1,Ky1,A2_values,D2_values,Kx2,Ky2,A3_values,D3_values,Kx3,Ky3,A4_values,D4_values,Kx4,Ky4,A5_values,D5_values,Kx5,Ky5,diag_p,diag_sp] = params
+        self.layer6_inp = (self.inp-diag_sp)/(diag_p)
         self.layer6 = electronice(
             n_in = n_in,
             inp = self.layer6_inp,

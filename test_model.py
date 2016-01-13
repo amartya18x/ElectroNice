@@ -8,7 +8,7 @@ class NiceACDC(object):
     def __init__(self,input,n_in,params):
         self.inp = input
         self.n_in = n_in
-        [A1_values,D1_values,Kx1,Ky1,A2_values,D2_values,Kx2,Ky2,A3_values,D3_values,Kx3,Ky3,A4_values,D4_values,Kx4,Ky4,A5_values,D5_values,Kx5,Ky5,diag_p] = params
+        [A1_values,D1_values,Kx1,Ky1,A2_values,D2_values,Kx2,Ky2,A3_values,D3_values,Kx3,Ky3,A4_values,D4_values,Kx4,Ky4,A5_values,D5_values,Kx5,Ky5,diag_p,diag_sp] = params
         self.layer1 = electronice(
             inp = input,
             n_in = n_in,
@@ -53,7 +53,7 @@ class NiceACDC(object):
         self.expr = self.layer5.output*(diag_p).dimshuffle('x',0)
         self.newDet = self.layer1.det+self.layer2.det+self.layer3.det+self.layer4.det+self.layer5.det+T.sum((T.log(abs(diag_p))))
         self.newLogDet = self.newDet
-        self.layer6_inp = self.expr/(diag_p).dimshuffle('x',0)
+        self.layer6_inp = (self.inp-self.diag_sp.dimshuffle('x',0))/(self.diag_p).dimshuffle('x',0)
         self.layer6 = electronice(
             n_in = n_in,
             inp = self.layer6_inp,

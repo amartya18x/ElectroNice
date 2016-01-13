@@ -111,5 +111,7 @@ The code is available on \url{http://github.com/amartya18x/ElectroNice}
 \item The $p_H(h)$ term is still not increasing. It stays the same throughout the training phase. I do not understand this yet.
 \item There is no overfitting. I have tested on the test\_set and it is exactly the same. This is because, the $p_H(h)$ is still the same and the jacobian term is almost independant of the training data except for the non-linearity and somehow it is not mattering.
 \item The Kx and Ky is getting pushed towards 0. So, effectively it is becoming a linear transformation.
+\item We tried to overfit the model on a small dataset of only ten images. In this case, the prior term started of with a low value of beow -2000 and then increased to -1086 and stuck there. Note that this is the same value the prioir term usually has.
+\item I also experimented with putting the prior as the cost function(i.e. removed the log-jacobian Determinant) and even then the prior wouldn't go above -1086. It came to this value and stayed on it. I am guessing the encoder somehow doesn't allow the encoded value to have a better loss. Is there any reason why this might happen ? Laurent, what was the prior log-likelihood term in the original NICE model on mnist ?
 \end{itemize}
 \end{document}

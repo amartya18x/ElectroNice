@@ -114,10 +114,11 @@ class NiceACDC(object):
             inverse = True
         )
         self.output = self.layer10.output
-        self.prior =T.mean(T.sum( -T.log(1+T.exp(self.expr)) - T.log(1 + T.exp(-1*self.expr)),axis=1))
+        self.prior =T.mean(T.sum( -1* T.log(1+T.exp(self.expr)) - 1* T.log(1 + T.exp(-1*self.expr)),axis=1))
         #self.prior = T.mean(T.log(T.prod(T.exp(-self.layer5.output*self.layer5.output)/np.sqrt(2*np.pi),axis=1)))
         self.cost = self.prior + self.newLogDet
         self.grad = T.grad(self.cost,self.params)
+        self.updates_prior = Adam(self.prior,self.params)
         self.updates = Adam(self.cost,self.params)
 class Sampler(object):
     def __init__(self,input,n_in,params):

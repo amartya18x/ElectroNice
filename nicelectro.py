@@ -72,11 +72,11 @@ class Params1(object):
         D = theano.shared(D_values, borrow=True)
 
         if Kx is None:
-            Kx = np.ones(n_in,)*(-0.5)
+            Kx = np.random.normal(1,0.1,(n_in,))
         
         
         if Ky is None:
-            Ky = np.ones(n_in,)*(0.5)
+            Ky = np.random.normal(1,0.1,(n_in,))
         
         Kx = theano.shared(Kx)
         Ky = theano.shared(Ky)

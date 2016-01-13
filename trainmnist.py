@@ -23,6 +23,7 @@ print "Created model"
 llh = ANice.cost
 output = ANice.output
 update = ANice.updates
+update_prior = ANice.updates_prior
 print "Obtained Grads"
 print "Created updates"
 
@@ -31,19 +32,27 @@ train_model = theano.function(
         outputs=[ANice.newLogDet,ANice.prior,ANice.cost],
     updates=update
         )
+
+train_prior = theano.function(
+        inputs=[x],
+        outputs=[ANice.prior],
+    updates=update_prior
+        )
 train_set_x, train_set_y = train_set
 p = len(train_set_x)
-batch_size = 10
+batch_size = 5
 n_batches = p/batch_size
+#n_batches = 2
 s = -1
 llh = -np.inf
+last = -np.inf
 while 1:
     s += 1
     batch_index = s%(n_batches-1)
     a= train_set_x[batch_index*batch_size:(batch_index+1)*batch_size]
     a = 2*a - 1
     b = (a/784)
-    cost =  train_model(b)
+    cost = train_model(b)
     llh = cost[2]
     if s%100 == 0:
         print cost

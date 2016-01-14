@@ -58,7 +58,7 @@ class electronice(object):
 
 
 class Params1(object):
-    def __init__(self,n_in,A=None,D=None,Kx=None,Ky=None):
+    def __init__(self,n_in,A=None,D=None,Kx=None,Ky=None,Db=None):
         if A is None:
             A_values = np.random.normal(1,0.1,(n_in,))
         else:
@@ -73,11 +73,16 @@ class Params1(object):
 
         if Kx is None:
             Kx = np.random.normal(1,0.1,(n_in,))
-        
+            
+        if Db is None:
+            Db_values = np.random.normal(0,0.1,(n_in,))
+        else:
+            Db_values = Db
         
         if Ky is None:
             Ky = np.random.normal(1,0.1,(n_in,))
-        
+
+            
         Kx = theano.shared(Kx)
         Ky = theano.shared(Ky)
         self.params = [A,D,Kx,Ky]

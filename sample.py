@@ -1,7 +1,7 @@
 import theano
 import theano.tensor as T
 import numpy as np
-from model import Sampler
+from model_s import Sampler
 import cPickle
 import gzip
 import os

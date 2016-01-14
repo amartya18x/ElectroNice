@@ -1,7 +1,7 @@
 import theano
 import theano.tensor as T
 import numpy as np
-from model import NiceACDC
+from model_s import NiceACDC
 import cPickle
 import gzip
 import os
@@ -18,10 +18,10 @@ train_set, valid_set, test_set = cPickle.load(f)
 f.close()
 print '... building the model'
 x = T.matrix('x')
-ANice = NiceACDC(input = x, n_in = n_in)
+ANice = NiceACDC(input = x, n_in = n_in,num_layer=5)
 print "Created model"
 llh = ANice.cost
-output = ANice.output
+#output = ANice.output
 update = ANice.updates
 update_prior = ANice.updates_prior
 print "Obtained Grads"

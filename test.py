@@ -1,12 +1,13 @@
 import theano
 import theano.tensor as T
 import numpy as np
-from test_model import NiceACDC
+from test_model_s import NiceACDC
 import cPickle
 import gzip
 import os
 import sys
 import timeit
+import matplotlib.pyplot as plt
 inp = T.matrix("inp")
 n_in = 784
 lr = theano.shared(0.0001)
@@ -22,12 +23,12 @@ param = cPickle.load(f)
 f.close()
 print '... building the model'
 x = T.matrix('x')
-ANice = NiceACDC(input = x, n_in = n_in,params=param)
+ANice = NiceACDC(input = x, n_in = n_in,params=param,num_layer=30)
 print "Created model"
 
 test_model = theano.function(
         inputs=[x],
-        outputs=[ANice.newLogDet,ANice.prior,ANice.cost,ANice.expr,ANice.reconstruction_err]
+        outputs=[ANice.newLogDet,ANice.prior,ANice.cost,ANice.expr,ANice.reconstruction_err,ANice.output]
         )
 print "built function"
 test_set_x, test_set_y = test_set
@@ -42,4 +43,7 @@ for i in range(1,2):
     a = 2*a - 1
     b = (a/784)
     cost =  test_model(b)
-    print cost
+    gene = cost[5].reshape(28,28)
+    plt.imshow(0.5*((gene*748)+1)*255,cmap='Greys')
+    plt.show()
+

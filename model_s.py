@@ -14,7 +14,6 @@ class NiceACDC(object):
         self.diag_sp = theano.shared(np.random.normal(0,0.01,size=(n_in,)))
         self.params =[]
         layers_enc = []
-        layers_enc = []
 
 
         coup = tuple((Params1(self.n_in)).params)
@@ -37,7 +36,7 @@ class NiceACDC(object):
         for i in range(1,num_layer):
             newDet += layers_enc[i].det
 
-        self.newLogDet = newDet
+        self.newLogDet = newDet + T.sum((T.log(abs(self.diag_p))))
 
 
         self.prior =T.mean(T.sum( -1* T.log(1+T.exp(self.expr)) - 1* T.log(1 + T.exp(-1*self.expr)),axis=1))
@@ -51,63 +50,28 @@ class NiceACDC(object):
         self.updates_prior = Adam(self.prior,self.params)
         self.updates = Adam(self.cost,self.params)
 class Sampler(object):
-    def __init__(self,input,n_in,params):
-        self.inp = input
+    def __init__(self,inp,n_in,params,num_layer):
         self.n_in = n_in
+        diag_p = params[4*num_layer]
+        diag_sp = params[4*num_layer + 1]
+        self.inp = (inp-diag_sp)/(diag_p)
+        self.layers_dec = []
+        layer1 = electronice(inp = self.inp, n_in = n_in, A = params[4*num_layer-4], D = params[4*num_layer-3], Kx = params[4*num_layer-2], Ky = params[4*num_layer-1],inverse=True)
+        self.layers_dec.append(layer1)
+
         
-    #[A1_values,D1_values,Kx1,Ky1,A2_values,D2_values,Kx2,Ky2,A3_values,D3_values,Kx3,Ky3,A4_values,D4_values,Kx4,Ky4,A5_values,D5_values,Kx5,Ky5,diag_p,diag_sp] = params
-    
-        self.layer6_inp = (self.inp-diag_sp)/(diag_p)
-        self.layer6 = electronice(
-            n_in = n_in,
-            inp = self.layer6_inp,
-            A = A5_values,
-            D = D5_values,
-            Kx = Kx5,
-            Ky = Ky5,
-            inverse = True 
-        )
-        self.layer7 = electronice(
-            n_in = n_in,
-            inp = self.layer6.output,
-            A = A4_values,
-            D = D4_values,
-            Kx = Kx4,
-            Ky = Ky4,
-            inverse = True
-        )
-        self.layer8 = electronice(
-            n_in = n_in,
-            inp = self.layer7.output,
-            A = A3_values,
-            D = D3_values,
-            Kx = Kx3,
-            Ky = Ky3,
-            inverse = True
-        )
-        self.layer9 = electronice(
-            n_in = n_in,
-            inp = self.layer8.output,
-            A = A2_values,D = D2_values,
-            Kx = Kx2,
-            Ky = Ky2,
-            inverse = True
-        )
-        self.layer10 =  electronice(
-            n_in = n_in,
-            inp = self.layer9.output,
-            A = A1_values,
-            D = D1_values,
-            Kx = Kx1,
-            Ky = Ky1,
-            inverse = True
-        )
-        self.output = self.layer10.output
+        for i in range(1,num_layer):
+            layer = electronice(inp = self.layers_dec[i-1].output, n_in = n_in, A = params[4*(num_layer-i)-4], D = params[4*(num_layer-i)-3], Kx = params[4*(num_layer-i)-2], Ky = params[4*(num_layer-i)-1],inverse=True)
+            self.layers_dec.append(layer)
+            
+
+        self.output = self.layers_dec[-1].output
         
 if __name__ == '__main__':
     inp = T.vector("inp")
     n_in = 784
-    ANice = NiceACDC(input = inp, n_in = n_in)
+    num_layers=5
+    ANice = NiceACDC(input = inp, n_in = n_in,num_layers=5)
     fn = theano.function([inp],[ANice.output])
     gn = theano.function([inp],ANice.grad)
     input  =np.random.uniform(size=(n_in,))

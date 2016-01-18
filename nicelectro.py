@@ -4,27 +4,37 @@ import theano.tensor as T
 from theano.tensor.shared_randomstreams import RandomStreams
 class electronice(object):
     def __init__(self,  inp, n_in, A,D,Kx,Ky,inverse=False):
+        '''
+        inp : Input tensor
+        n_in : Dimension of input tensor
+        A,D : Model parameters for that layer
+        Kx,Ky : Piecewise-linerity parameters
+        inverse : True if this layer is a part of the decoding network
+        '''
         activation = self.knot_activ
         self.inp = inp
-        
+
+        # Compute C values. Need to improve this to O(nlog(n)) implementation
         C_values = self.dct_matrix(n_in,n_in).astype(theano.config.floatX)
         C = theano.shared(value=C_values,name='C',borrow=True)
         C_Tvalues = self.dct_matrix(n_in,n_in).astype(theano.config.floatX)
         C_t = theano.shared(value=C_values.T,name='C_t',borrow=True)   
-
+        
         self.Kx = Kx
         self.Ky = Ky
         self.A = A
         self.D = D
         if inverse == False:
-            self.h1 = inp*(T.tanh(self.A)).dimshuffle('x',0)
-            self.h2 = T.dot(self.h1,C)
-            self.h3 = self.h2*(T.tanh(self.D)).dimshuffle('x',0)
-            self.lin_output = T.dot(self.h3,C_t)
-            self.output = self.knot_activ(self.lin_output)
-            self.activD = self.knot_Det(self.lin_output)
-            self.det = T.log(T.prod(T.tanh(self.A))*T.prod(T.tanh(self.D)))+T.mean(T.log(T.prod(self.activD,axis=0)))
+            #If part of the encoding lauyer
+            self.h1 = inp*(T.tanh(self.A)).dimshuffle('x',0) #multiply by diagonal A
+            self.h2 = T.dot(self.h1,C) #DCT transform
+            self.h3 = self.h2*(T.tanh(self.D)).dimshuffle('x',0) #multiply by diagonal D
+            self.lin_output = T.dot(self.h3,C_t) #Inverse DCT transform
+            self.output = self.knot_activ(self.lin_output) #piecewise linear activation
+            self.activD = self.knot_Det(self.lin_output) # calculate the diagonal elements of the jacobian of the non-linearity
+            self.det = T.log(T.prod(T.tanh(self.A))*T.prod(T.tanh(self.D)))+T.mean(T.log(T.prod(self.activD,axis=0))) # Calculate the contribution of the layer towards the log-det term
         else:
+            #Same as the encoding part with minor mods
             self.h1 = self.knot_activ_inverse(inp)
             self.h2 = T.dot(self.h1,C)
             self.h3 = self.h2* (1/T.tanh(self.D)).dimshuffle('x',0)
@@ -36,9 +46,15 @@ class electronice(object):
         self.params = [self.A, self.D, self.Kx,self.Ky]
         
     def knot_activ(self,x):
+        '''
+        Piecewise linear activation
+        '''
         return (x<T.tanh(self.Kx))*( (x+1)*(T.tanh(self.Ky)+1)/(T.tanh(self.Kx)+1) - 1 )  + (x>=T.tanh(self.Kx)) *( (x-1)*(T.tanh(self.Ky)-1)/(T.tanh(self.Kx)-1) + 1 )
 
     def knot_activ_inverse(self,x):
+        '''
+        Calculate the inverse of the piee-wise linearity
+        '''
         return (x<T.tanh(self.Ky))*( (x+1)*(T.tanh(self.Kx)+1)/(T.tanh(self.Ky)+1) - 1 )  + (x>=T.tanh(self.Ky)) *( (x-1)*(T.tanh(self.Kx)-1)/(T.tanh(self.Ky)-1) + 1 )
     
     def knot_Det(self,x):
@@ -58,6 +74,9 @@ class electronice(object):
 
 
 class Params1(object):
+    '''
+    Generate Parameters
+    '''
     def __init__(self,n_in,A=None,D=None,Kx=None,Ky=None,Db=None):
         if A is None:
             A_values = np.random.normal(1,0.1,(n_in,))

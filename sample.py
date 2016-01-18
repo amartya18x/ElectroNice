@@ -7,9 +7,10 @@ import gzip
 import os
 import sys
 import timeit
+from datetime import datetime
 inp = T.matrix("inp")
 n_in = 784
-num_layer = 5
+num_layer = 30
 theano.config.floatX = 'float32'
 
 f = open('best_model.pkl')
@@ -22,12 +23,20 @@ sample_model = theano.function(
         )
 import matplotlib.pyplot as plt
 #%matplotlib inline
-#samp = np.random.logistic(size=(1,784)).astype('float32')
+np.random.seed(datetime.now().time().microsecond)
+samp = np.random.logistic(size=(1,784)).astype('float32')
+#samples = np.random.uniform(size=(1,784)).astype('float32')
+#samp =  np.log(samples) - np.log(1-samples)
+gene = np.asarray(sample_model(samp/1000)).reshape(28,28)
+gene[gene<-0.5]=-1
+plt.imshow(0.5*((gene*748)+1)*255/np.sum(((gene*784)+1)*0.5),cmap='Greys')
+plt.show()
+
 samples = np.random.uniform(size=(1,784)).astype('float32')
 samp =  np.log(samples) - np.log(1-samples)
-gene = np.asarray(sample_model(samp)).reshape(28,28)
+gene = np.asarray(sample_model(samp/10000)).reshape(28,28)
 print gene
-print ((gene*748)+1)*0.5
+print ((((gene*784)+1)*0.5)*255.0)
 
-plt.imshow(0.5*((gene*748)+1),cmap='Greys')
+plt.imshow(0.5*((gene*748)+1)*255/np.sum(((gene*784)+1)*0.5),cmap='Greys')
 plt.show()

@@ -48,19 +48,30 @@ class electronice(object):
     def knot_activ(self,x):
         '''
         Piecewise linear activation
+        If x < tanh(Kx):
+             y = (x+1)*(tanh(Ky)+1)/(tanh(Kx) + 1) - 1
+        Else
+             y = (x-1)*(tanh(Ky) - 1)/(tanh(Kx) - 1) + 1
         '''
         return (x<T.tanh(self.Kx))*( (x+1)*(T.tanh(self.Ky)+1)/(T.tanh(self.Kx)+1) - 1 )  + (x>=T.tanh(self.Kx)) *( (x-1)*(T.tanh(self.Ky)-1)/(T.tanh(self.Kx)-1) + 1 )
 
     def knot_activ_inverse(self,x):
         '''
         Calculate the inverse of the piee-wise linearity
+        It is the inverse of the previous function
         '''
         return (x<T.tanh(self.Ky))*( (x+1)*(T.tanh(self.Kx)+1)/(T.tanh(self.Ky)+1) - 1 )  + (x>=T.tanh(self.Ky)) *( (x-1)*(T.tanh(self.Kx)-1)/(T.tanh(self.Ky)-1) + 1 )
     
     def knot_Det(self,x):
+        '''
+        Calculate the Jacobian of the piece-wise linear activation
+        '''
         return (x<T.tanh(self.Kx))*( (T.tanh(self.Ky)+1)/(T.tanh(self.Kx)+1)  )  + (x>=T.tanh(self.Kx)) *( (T.tanh(self.Ky)-1)/(T.tanh(self.Kx)-1)  )
 
     def knot_Det_inverse(self,x):
+        '''
+        Returns the Jacobian of the piece-wise linear activation for the inverse transformation
+        '''
         return (x<T.tanh(self.Ky))*( (T.tanh(self.Kx)+1)/(T.tanh(self.Ky)+1)  )  + (x>=T.tanh(self.Ky)) *((T.tanh(self.Kx)-1)/(T.tanh(self.Ky)-1)  )
     def dct_matrix(self,rows, cols, unitary=True):
         rval = np.zeros((rows, cols))
@@ -78,27 +89,32 @@ class Params1(object):
     Generate Parameters
     '''
     def __init__(self,n_in,A=None,D=None,Kx=None,Ky=None,Db=None):
+        #Db is useless
         if A is None:
+            #Generate one centred gaussian noise with 0.1 variance as the diagnoal layer A
             A_values = np.random.normal(1,0.1,(n_in,))
         else:
             A_values = A
         A = theano.shared(A_values,borrow=True)
         
         if D is None:
+            #Generate one centred gaussian noise with 0.1 variance as the diagnoal layer A
             D_values = np.random.normal(1,0.1,(n_in,))
         else:
             D_values = D
         D = theano.shared(D_values, borrow=True)
 
         if Kx is None:
+            #Kx is the projection of the knot on the x-axis
             Kx = np.random.normal(1,0.1,(n_in,))
             
-        if Db is None:
+        if Db is None:#THis is useless
             Db_values = np.random.normal(0,0.1,(n_in,))
         else:
             Db_values = Db
         
         if Ky is None:
+            #Ky is the projection of the knot on the y-axis
             Ky = np.random.normal(1,0.1,(n_in,))
 
             

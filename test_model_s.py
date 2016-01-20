@@ -6,6 +6,10 @@ from theano.tensor.shared_randomstreams import RandomStreams
 import theano.tensor.nlinalg
 class NiceACDC(object):
     def __init__(self,input,n_in,params,num_layer):
+        '''THis is essentially a combination of NiceACDC in model_s.py and Sampler in model_s.py
+        It is the same as those
+        '''
+        
         self.inp = input
         self.n_in = n_in
         self.num_layer = num_layer

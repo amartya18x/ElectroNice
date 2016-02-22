@@ -1,7 +1,7 @@
 import theano
 import theano.tensor as T
 floatX = float
-def Adam(cost, params, lr=0.00002, b1=0.1, b2=0.001, e=1e-8):
+def Adam(cost, params, lr=0.0000001, b1=0.01, b2=0.0001, e=1e-8):
         updates = []
         grads = T.grad(cost, params)
         i = theano.shared(floatX(0.))

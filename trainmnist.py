@@ -58,7 +58,7 @@ train_set_x, train_set_y = train_set
 p = len(train_set_x)
 
 #Batch Size
-batch_size = 5
+batch_size = 500
 
 #Number of batches
 n_batches = p/batch_size

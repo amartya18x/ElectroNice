@@ -28,21 +28,21 @@ class electronice(object):
             #If part of the encoding lauyer
             self.h1 = inp*(T.tanh(self.A)).dimshuffle('x',0) #multiply by diagonal A
             self.h2 = T.dot(self.h1,C) #DCT transform
-            self.h3 = self.h2*(T.tanh(self.D)).dimshuffle('x',0) #multiply by diagonal D
+            self.h3 = self.h2*(self.D).dimshuffle('x',0) #multiply by diagonal D
             self.lin_output = T.dot(self.h3,C_t) #Inverse DCT transform
             self.output = self.knot_activ(self.lin_output) #piecewise linear activation
             self.activD = self.knot_Det(self.lin_output) # calculate the diagonal elements of the jacobian of the non-linearity
-            self.det = T.log(T.prod(T.tanh(self.A))*T.prod(T.tanh(self.D)))+T.mean(T.log(T.prod(self.activD,axis=0))) # Calculate the contribution of the layer towards the log-det term
+            self.det = T.sum(abs(T.log(T.tanh(self.A))))+(T.sum(T.log(abs(self.D))))+T.mean(T.log(abs(T.prod(self.activD,axis=0))))# Calculate the contribution of the layer towards the log-det term
         else:
             #Same as the encoding part with minor mods
             self.h1 = self.knot_activ_inverse(inp)
             self.h2 = T.dot(self.h1,C)
-            self.h3 = self.h2* (1/T.tanh(self.D)).dimshuffle('x',0)
+            self.h3 = self.h2* (1/self.D).dimshuffle('x',0)
             self.h4 = T.dot(self.h3,C_t)
             self.lin_output = self.h4*(1/T.tanh(self.A)).dimshuffle('x',0)
             self.output = self.lin_output
             self.activD = self.knot_Det_inverse(inp)
-            self.det = T.log(T.prod(T.tanh(self.A))*T.prod(T.tanh(self.D)))+T.mean(T.log(T.prod(self.activD,axis=0)))
+            self.det = T.sum(abs(T.log(T.tanh(self.A))))+(T.sum(T.log(abs(self.D))))+T.mean(T.log(abs(T.prod(self.activD,axis=0))))
         self.params = [self.A, self.D, self.Kx,self.Ky]
         
     def knot_activ(self,x):

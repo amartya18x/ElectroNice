@@ -28,7 +28,7 @@ print '... building the model'
 
 #Create the model
 x = T.matrix('x')
-ANice = NiceACDC(input = x, n_in = n_in,num_layer=5)
+ANice = NiceACDC(input = x, n_in = n_in,num_layer=25)
 print "Created model"
 
 #THis is the total log-likelihood
@@ -82,5 +82,5 @@ while 1:
     llh = cost[2]
     if s%100 == 0:
         print cost
-        with open('best_model.pkl', 'w') as f:
+        with open('best_model_layer25_Dfull.pkl', 'w') as f:
                         cPickle.dump(ANice.params, f)

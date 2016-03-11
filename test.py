@@ -23,7 +23,7 @@ param = cPickle.load(f)
 f.close()
 print '... building the model'
 x = T.matrix('x')
-ANice = NiceACDC(input = x, n_in = n_in,params=param,num_layer=5)
+ANice = NiceACDC(input = x, n_in = n_in,params=param,num_layer=10)
 print "Created model"
 
 test_model = theano.function(
@@ -40,8 +40,6 @@ llh = -np.inf
 #for i in range(0,n_batches-1):
 for i in range(1,2):
     a= test_set_x[i:i+1]
-    plt.imshow(a.reshape(28,28)*255,cmap='Greys')
-    plt.show()
     a = 2*a - 1
     b = (a/784)
     cost =  test_model(b)
@@ -49,5 +47,4 @@ for i in range(1,2):
     gene = cost[5].reshape(28,28)
     plt.imshow(0.5*((gene*748)+1)*255,cmap='Greys')
     plt.show()
-print cost
 

@@ -48,4 +48,4 @@ class NiceACDC(object):
             
 
         self.output = self.layers_dec[-1].output
-        self.reconstruction_err = T.sum(T.nnet.binary_crossentropy(abs(self.output),input))
+        self.reconstruction_err = T.sum(T.nnet.binary_crossentropy(self.output,input))

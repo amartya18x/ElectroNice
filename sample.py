@@ -18,7 +18,7 @@ param = cPickle.load(f)
 f.close()
 
 #Generate the sampler model
-sampler = Sampler(inp,n_in,param,num_layer=5)
+sampler = Sampler(inp,n_in,param,num_layer=10)
 
 #Sample function
 sample_model = theano.function(
@@ -32,7 +32,7 @@ import matplotlib.pyplot as plt
 np.random.seed(datetime.now().time().microsecond)
 
 #Generate the logistic random sample
-samp = np.random.logistic(loc = 0.0 , scale = .3, size=(1,784)).astype('float32')
+samp = np.random.logistic(loc = 0.0002 , scale = 1.0001, size=(1,784)).astype('float32')
 
 
 
@@ -42,14 +42,14 @@ samp = np.random.logistic(loc = 0.0 , scale = .3, size=(1,784)).astype('float32'
 #samp =  np.log(samples) - np.log(1-samples)
 
 #Reducing the variance in the data(From the observation)
-gene = np.asarray(sample_model(samp)).reshape(28,28)
+gene = np.asarray(sample_model(samp/1)).reshape(28,28)
 #gene[gene<-0.5]=-1
 
 #We had normalized previously and so bringing it back
-image = (0.5*(gene)+1)*255
-print image
+image = (0.5*(gene*748)+1)*255
+
 #image[image<200] = 0
-#image[image>110] = 255
+#image[image>200] = 255
 #print (0.5*(gene*748)+1)*255
 print image
 plt.imshow(image,cmap='Greys')

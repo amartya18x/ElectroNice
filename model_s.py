@@ -10,7 +10,7 @@ class NiceACDC(object):
         self.inp = input
         self.n_in = n_in
         ##Build the shared parameters
-        self.diag_p = theano.shared(np.random.normal(1,0.01,size=(n_in,)))
+        self.diag_p = theano.shared(np.random.normal(1,0.1,size=(n_in,)))
         self.diag_sp = theano.shared(np.random.normal(0,0.01,size=(n_in,)))
         self.params =[]
         layers_enc = []
@@ -37,7 +37,7 @@ class NiceACDC(object):
         self.params += (self.diag_p,self.diag_sp)
         
         #Calculate the final output of the encoding part by multiplying the rescaling term and adding the bias term
-        self.expr = ((layers_enc[-1].output)*(self.diag_p).dimshuffle('x',0))+self.diag_sp.dimshuffle('x',0)
+        self.expr = (layers_enc[-1].output)*(self.diag_p).dimshuffle('x',0)+self.diag_sp.dimshuffle('x',0)
 
         #Calculate the log-det term by adding the contribution of each layer
         newDet =  layers_enc[0].det

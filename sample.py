@@ -10,7 +10,7 @@ import timeit
 from datetime import datetime
 inp = T.matrix("inp")
 n_in = 784
-num_layer = 30
+num_layer = 25
 theano.config.floatX = 'float32'
 
 f = open('best_model.pkl')
@@ -18,7 +18,7 @@ param = cPickle.load(f)
 f.close()
 
 #Generate the sampler model
-sampler = Sampler(inp,n_in,param,num_layer=5)
+sampler = Sampler(inp,n_in,param,num_layer=25)
 
 #Sample function
 sample_model = theano.function(
@@ -32,7 +32,7 @@ import matplotlib.pyplot as plt
 np.random.seed(datetime.now().time().microsecond)
 
 #Generate the logistic random sample
-samp = np.random.logistic(loc = 0.0 , scale = .3, size=(1,784)).astype('float32')
+samp = np.random.logistic(loc = 0.0 , scale = .1, size=(1,784)).astype('float32')
 
 
 
